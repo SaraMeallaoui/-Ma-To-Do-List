@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🌸 Ma To-Do List</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #ffe0f0, #e3d4f3);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding-top: 50px;
+    }
+
+    .container {
+      background-color: #fff5fa;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 2px solid #ffc0cb;
+    }
+
+    h1 {
+      text-align: center;
+      color: #d63384;
+      margin-bottom: 20px;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    #taskInput {
+      flex: 1;
+      padding: 10px 15px;
+      border: 2px solid #f8c2d6;
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    #addTaskBtn {
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    #addTaskBtn:hover {
+      background-color: #ff1493;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .task-item {
+      background-color: #fff0f6;
+      border-left: 4px solid #ffb6c1;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.3s;
+    }
+
+    .task-item.completed span {
+      text-decoration: line-through;
+      color: #aaa;
+    }
+
+    .task-actions button {
+      background: none;
+      border: none;
+      color: #d63384;
+      font-size: 18px;
+      margin-left: 5px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .task-actions button:hover {
+      color: #a00055;
+    }
+
+    .stats {
+      text-align: center;
+      margin-top: 20px;
+      color: #8b008b;
+      font-weight: bold;
+    }
+
+    @media (max-width: 500px) {
+      .input-container {
+        flex-direction: column;
+      }
+
+      #addTaskBtn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌸 Ma To-Do List</h1>
+    <div class="input-container">
+      <input type="text" id="taskInput" placeholder="Ajouter une tâche...">
+      <button id="addTaskBtn"><i class="fas fa-plus"></i></button>
+    </div>
+    <ul id="taskList"></ul>
+    <div class="stats">
+      <div id="totalTasks">0 tâche</div>
+      <div id="completedTasks">0 terminée</div>
+    </div>
+  </div>
+
+  <script>
+    const taskInput = document.getElementById("taskInput");
+    const addTaskBtn = document.getElementById("addTaskBtn");
+    const taskList = document.getElementById("taskList");
+    const totalTasksEl = document.getElementById("totalTasks");
+    const completedTasksEl = document.getElementById("completedTasks");
+
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    const saveTasks = () => localStorage.setItem("tasks", JSON.stringify(tasks));
+
+    const updateStats = () => {
+      const total = tasks.length;
+      const completed = tasks.filter(t => t.completed).length;
+      totalTasksEl.textContent = `${total} tâche${total > 1 ? 's' : ''}`;
+      completedTasksEl.textContent = `${completed} terminée${completed > 1 ? 's' : ''}`;
+    };
+
+    const renderTasks = () => {
+      taskList.innerHTML = "";
+      tasks.forEach(task => {
+        const li = document.createElement("li");
+        li.className = "task-item" + (task.completed ? " completed" : "");
+        li.dataset.id = task.id;
+
+        li.innerHTML = `
+          <span>${task.text}</span>
+          <div class="task-actions">
+            <button class="complete"><i class="fas fa-check"></i></button>
+            <button class="delete"><i class="fas fa-trash"></i></button>
+          </div>
+        `;
+
+        li.querySelector(".complete").onclick = () => {
+          task.completed = !task.completed;
+          saveTasks();
+          renderTasks();
+          updateStats();
+        };
+
+        li.querySelector(".delete").onclick = () => {
+          tasks = tasks.filter(t => t.id !== task.id);
+          saveTasks();
+          renderTasks();
+          updateStats();
+        };
+
+        taskList.appendChild(li);
+      });
+    };
+
+    addTaskBtn.onclick = () => {
+      const text = taskInput.value.trim();
+      if (!text) return;
+      const newTask = { id: Date.now(), text, completed: false };
+      tasks.push(newTask);
+      saveTasks();
+      renderTasks();
+      updateStats();
+      taskInput.value = "";
+      taskInput.focus();
+    };
+
+    taskInput.addEventListener("keypress", e => {
+      if (e.key === "Enter") addTaskBtn.click();
+    });
+
+    
+    renderTasks();
+    updateStats();
+  </script>
+</body>
+</html>
